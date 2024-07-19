@@ -1,0 +1,75 @@
+# Dockerfile: https://github.com/k8snetworkplumbingwg/sriov-network-device-plugin/blob/v3.6.2/images/Dockerfile
+name: sriov-net-device-plugin
+summary: SR-IOV Network Device Plugin rock
+description: |
+    A rock containing the SR-IOV Network Device Plugin for Kubernetes.
+
+    The SR-IOV Network Device Plugin is Kubernetes device plugin for
+    discovering and advertising networking resources in the form of
+    SR-IOV virtual functions (VFs), PCI physical functions (PFs),
+    Auxiliary network devices, in particular Subfunctions (SFs).
+license: Apache-2.0
+version: 3.6.2
+
+base: ubuntu@22.04
+build-base: ubuntu@22.04
+run-user: _daemon_
+
+platforms:
+  amd64:
+  arm64:
+
+environment:
+  APP_VERSION: 3.6.2
+
+# Services to be loaded by the Pebble entrypoint
+services:
+  install-cni:
+    override: replace
+    startup: enabled
+    command: "bash /entrypoint.sh [ -h ]"
+    on-success: shutdown
+    on-failure: shutdown
+
+entrypoint-service: install-cni
+
+parts:
+  build-deps:
+    plugin: nil
+    build-snaps:
+      - go/1.20/stable
+
+  sriov-network-device-plugin:
+    after: [build-deps]
+    plugin: go
+    source: https://github.com/k8snetworkplumbingwg/sriov-network-device-plugin
+    source-type: git
+    source-tag: v${CRAFT_PROJECT_VERSION}
+    source-depth: 1
+    build-environment:
+      - CGO_ENABLED: 0
+      - GOOS: linux
+      - GOARCH: $CRAFT_ARCH_BUILD_FOR
+    go-buildtags:
+      - no_openssl
+    go-generate:
+      - ./cmd/sriovdp
+    organize:
+      bin/sriovdp: usr/bin/
+    override-build: |
+      craftctl default
+      cp images/entrypoint.sh "${CRAFT_PART_INSTALL}/"
+
+  ddptool-binary:
+    after: [build-deps]
+    plugin: nil
+    source: https://github.com/k8snetworkplumbingwg/sriov-network-device-plugin/raw/v3.6.2/images/ddptool-1.0.1.12.tar.gz
+    source-type: tar
+    build-environment:
+      - GOOS: linux
+      - GOARCH: $CRAFT_ARCH_BUILD_FOR
+    override-build: |
+      set -x
+      make
+      mkdir -p "${CRAFT_PART_INSTALL}/usr/bin/"
+      cp ddptool "${CRAFT_PART_INSTALL}/usr/bin/"
