@@ -4,6 +4,7 @@
 
 import logging
 from pathlib import Path
+import subprocess
 
 from k8s_test_harness import harness
 from k8s_test_harness.util import env_util, k8s_util
@@ -11,9 +12,7 @@ from k8s_test_harness.util import env_util, k8s_util
 LOG = logging.getLogger(__name__)
 
 
-def _clone_git_repo(location: Path, repo: str, branch: str, instance: harness.Instance):
-    location.mkdir()
-
+def _clone_git_repo(location: Path, repo: str, branch: str):
     clone_command = [
         "git",
         "clone",
@@ -25,7 +24,7 @@ def _clone_git_repo(location: Path, repo: str, branch: str, instance: harness.In
         str(location.absolute()),
     ]
 
-    instance.exec(clone_command)
+    subprocess.run(clone_command, check=True)
 
 
 def _deploy_sriov_ndp(temp_path: Path, instance: harness.Instance):
@@ -35,7 +34,7 @@ def _deploy_sriov_ndp(temp_path: Path, instance: harness.Instance):
 
     clone_path = temp_path / "sriov-ndp"
     repo = "https://github.com/k8snetworkplumbingwg/sriov-network-device-plugin"
-    _clone_git_repo(clone_path, repo, "v3.6.2", instance)
+    _clone_git_repo(clone_path, repo, "v3.6.2")
     deployments_path = clone_path / "deployments"
 
     # Create a NetworkAttachmentDefinition and a deployment requiring it.
