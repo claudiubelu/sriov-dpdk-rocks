@@ -11,9 +11,8 @@ description: |
 license: Apache-2.0
 version: 3.6.2
 
-base: ubuntu@22.04
+base: bare
 build-base: ubuntu@22.04
-run-user: _daemon_
 
 platforms:
   amd64:
@@ -34,6 +33,18 @@ services:
 entrypoint-service: install-cni
 
 parts:
+  add-base-files:
+    plugin: nil
+    stage-packages:
+      - base-files
+      - bash
+      - coreutils
+      - gawk
+    override-build: |
+      # Need to add symlink to awk.
+      mkdir -p $CRAFT_PART_INSTALL/usr/bin
+      ln -s gawk $CRAFT_PART_INSTALL/usr/bin/awk
+
   build-deps:
     plugin: nil
     build-snaps:
