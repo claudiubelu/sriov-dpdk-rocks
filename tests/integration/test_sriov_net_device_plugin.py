@@ -3,8 +3,8 @@
 #
 
 import logging
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 from k8s_test_harness import harness
 from k8s_test_harness.util import env_util, k8s_util
