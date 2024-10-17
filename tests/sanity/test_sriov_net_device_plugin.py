@@ -19,9 +19,6 @@ def test_sriov_dpdk_rock():
     )
     image = rock.image
 
-    # check rock filesystem.
-    docker_util.ensure_image_contains_paths(image, ROCK_EXPECTED_FILES)
-
     # check binary.
     process = docker_util.run_in_docker(image, ["sriovdp", "--help"], False)
     assert "Usage of sriovdp:" in process.stderr

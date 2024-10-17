@@ -11,7 +11,7 @@ description: |
 license: Apache-2.0
 version: 3.6.2
 
-base: ubuntu@22.04
+base: bare
 build-base: ubuntu@22.04
 run-user: _daemon_
 
@@ -33,6 +33,11 @@ services:
 entrypoint-service: install-cni
 
 parts:
+  add-base-files:
+    plugin: nil
+    stage-packages:
+      - base-files
+
   build-deps:
     plugin: nil
     build-snaps:
